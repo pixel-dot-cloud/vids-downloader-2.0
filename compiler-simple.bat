@@ -14,7 +14,7 @@ echo.
 REM Simple onefile build - let PyInstaller handle everything
 pyinstaller --noconfirm --onefile --windowed ^
     --name "VidsDL" ^
-    --add-data "localindex.html;." ^
+    --add-data "index.html;." ^
     --collect-all yt_dlp ^
     app.py
 
