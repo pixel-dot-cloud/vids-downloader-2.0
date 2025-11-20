@@ -25,8 +25,8 @@ if getattr(sys, 'frozen', False):
     # Compiled: save next to .exe in "downloads" folder
     DOWNLOADS_FOLDER = os.path.join(os.path.dirname(sys.executable), 'downloads')
 else:
-    # Script: save next to script in "downloads" folder
-    DOWNLOADS_FOLDER = os.path.join(BASE_DIR, "downloads")
+    # Script: save to user's Downloads folder (works everywhere!)
+    DOWNLOADS_FOLDER = os.path.join(os.path.expanduser('~'), 'Downloads')
 
 # Create downloads folder if it doesn't exist
 if not os.path.exists(DOWNLOADS_FOLDER):
@@ -69,13 +69,31 @@ def get_info():
         
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
+            
+            # Detect if it's a short (vertical video)
+            width = info.get('width', 0)
+            height = info.get('height', 0)
+            is_vertical = height > width if (width and height) else False
+            
+            # Get all available formats to check resolutions
+            available_heights = set()
+            if 'formats' in info:
+                for fmt in info['formats']:
+                    fmt_height = fmt.get('height')
+                    if fmt_height and fmt_height >= 360:  # Only resolutions 360p+
+                        available_heights.add(fmt_height)
+            
             return jsonify({
                 'title': info.get('title', 'Título não disponível'),
                 'duration': format_duration(info.get('duration')),
                 'thumbnail': info.get('thumbnail', ''),
                 'uploader': info.get('uploader', 'Desconhecido'),
                 'view_count': info.get('view_count', 0),
-                'upload_date': info.get('upload_date', 'N/A')
+                'upload_date': info.get('upload_date', 'N/A'),
+                'is_vertical': is_vertical,
+                'width': width,
+                'height': height,
+                'available_heights': sorted(list(available_heights), reverse=True)
             })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -167,6 +185,22 @@ def download_video():
         print(f"> Download: {url}")
         print(f"[INFO] Quality: {quality}p | Format: {format_type.upper()}")
         
+        # SHORTS FIX: If vertical video, force max resolution to get best available
+        # Check video info to see if it's vertical
+        try:
+            with yt_dlp.YoutubeDL({'quiet': True}) as ydl_check:
+                check_info = ydl_check.extract_info(url, download=False)
+                check_width = check_info.get('width', 0)
+                check_height = check_info.get('height', 0)
+                is_vertical = check_height > check_width if (check_width and check_height) else False
+                
+                if is_vertical:
+                    original_quality = quality
+                    quality = '2160'  # Always force max for shorts
+                    print(f"[SHORT DETECTED] Forcing {original_quality}p -> {quality}p to get best available")
+        except:
+            pass  # If check fails, continue with original quality
+        
         # First, list available formats for debugging
         print("\n[CHECK] Checking available formats...")
         try:
@@ -232,7 +266,19 @@ def download_video():
         # Get video title and create safe filename
         video_title = info.get('title', 'video')
         safe_title = "".join(c for c in video_title if c.isalnum() or c in (' ', '-', '_')).rstrip()[:50]
-        final_filename = f"{safe_title}_{quality}p.{format_type}" if not is_audio_only else f"{safe_title}.mp3"
+        
+        # Log actual downloaded resolution
+        actual_width = info.get('width', 'unknown')
+        actual_height = info.get('height', 'unknown')
+        print(f"[INFO] Actual downloaded resolution: {actual_width}x{actual_height}")
+        
+        # Use ACTUAL resolution in filename instead of requested
+        if actual_width != 'unknown' and actual_height != 'unknown':
+            resolution_str = f"{actual_width}x{actual_height}"
+        else:
+            resolution_str = f"{quality}p"
+        
+        final_filename = f"{safe_title}_{resolution_str}.{format_type}" if not is_audio_only else f"{safe_title}.mp3"
         
         # Copy to Downloads folder (more reliable than move)
         destination = os.path.join(DOWNLOADS_FOLDER, final_filename)
