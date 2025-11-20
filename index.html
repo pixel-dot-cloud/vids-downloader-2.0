@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VidsDL - YouTube Downloader</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        .container {
+            background: rgba(17, 24, 39, 0.85);
+            backdrop-filter: blur(20px);
+            padding: 45px;
+            border-radius: 24px;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5),
+                        0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+            max-width: 650px;
+            width: 100%;
+            position: relative;
+            z-index: 1;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* Glow effect on container */
+        .container::after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(252, 70, 107, 0.3));
+            border-radius: 24px;
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .container:hover::after {
+            opacity: 1;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        .logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #6366f1 0%, #ec4899 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
+            animation: pulse 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        h1 {
+            color: #fff;
+            margin: 0;
+            font-size: 32px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #6366f1 0%, #ec4899 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .subtitle {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 14px;
+            margin-top: 8px;
+            font-weight: 500;
+        }
+        
+        .version {
+            display: inline-block;
+            background: rgba(99, 102, 241, 0.2);
+            color: #818cf8;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            margin-top: 12px;
+            letter-spacing: 0.5px;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 10px;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 600;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        label::before {
+            content: '';
+            display: inline-block;
+            width: 4px;
+            height: 14px;
+            background: linear-gradient(135deg, #6366f1, #ec4899);
+            margin-right: 8px;
+            border-radius: 2px;
+            vertical-align: middle;
+        }
+        
+        input[type="text"] {
+            width: 100%;
+            padding: 14px 18px;
+            border: 1.5px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            font-size: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            transition: all 0.3s;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        input[type="text"]::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #6366f1;
+            background: rgba(99, 102, 241, 0.1);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+        
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .select-wrapper {
+            position: relative;
+        }
+        
+        select {
+            width: 100%;
+            padding: 14px 18px;
+            border: 1.5px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            font-size: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            cursor: pointer;
+            appearance: none;
+            transition: all 0.3s;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+            background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%236366f1' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            padding-right: 45px;
+        }
+
+        select option {
+            background: #1f2937;
+            color: #fff;
+        }
+        
+        select:focus {
+            outline: none;
+            border-color: #6366f1;
+            background: rgba(99, 102, 241, 0.1);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
+            background-size: 200% 200%;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
+            position: relative;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+        
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(99, 102, 241, 0.6);
+            background-position: 100% 0;
+        }
+        
+        .btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+        
+        .btn:disabled {
+            background: rgba(75, 85, 99, 0.5);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+            opacity: 0.6;
+        }
+        
+        .status {
+            margin-top: 20px;
+            padding: 14px 18px;
+            border-radius: 12px;
+            display: none;
+            font-size: 14px;
+            border: 1.5px solid;
+            font-weight: 500;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .status.info {
+            background: rgba(59, 130, 246, 0.1);
+            color: #60a5fa;
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+        
+        .status.success {
+            background: rgba(16, 185, 129, 0.1);
+            color: #34d399;
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+        
+        .status.error {
+            background: rgba(239, 68, 68, 0.1);
+            color: #f87171;
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+        
+        .progress {
+            margin-top: 20px;
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899);
+            width: 0%;
+            transition: width 0.3s;
+            border-radius: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.3),
+                transparent
+            );
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .progress-text {
+            text-align: center;
+            margin-top: 8px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .video-info {
+            margin-top: 25px;
+            padding: 0;
+            background: transparent;
+            border-radius: 16px;
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+
+        .video-info-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1.5px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .video-info-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border-color: rgba(99, 102, 241, 0.3);
+        }
+
+        .video-info img {
+            width: 100%;
+            display: block;
+            aspect-ratio: 16/9;
+            object-fit: cover;
+        }
+
+        .video-details {
+            padding: 18px;
+        }
+
+        .video-title {
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: #fff;
+            font-size: 16px;
+            line-height: 1.4;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .video-meta {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 13px;
+            line-height: 1.8;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .video-meta span {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .format-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            background: rgba(99, 102, 241, 0.2);
+            color: #818cf8;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+        }
+
+        .footer {
+            margin-top: 25px;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .footer a {
+            color: #818cf8;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer a:hover {
+            color: #a5b4fc;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 30px 20px;
+            }
+            
+            h1 {
+                font-size: 26px;
+            }
+            
+            .options-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .logo-icon {
+                width: 40px;
+                height: 40px;
+                font-size: 20px;
+            }
+        }
+
+        /* Loading spinner for button */
+        .btn.loading::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            top: 50%;
+            left: 50%;
+            margin-left: -8px;
+            margin-top: -8px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">
+                <div class="logo-icon">▶️</div>
+            </div>
+            <h1>VidsDL</h1>
+            <p class="subtitle">High-quality YouTube video & audio downloader</p>
+            <span class="version">LOCAL v2.0</span>
+        </div>
+        
+        <div class="input-group">
+            <label for="videoUrl">Video URL</label>
+            <input type="text" id="videoUrl" placeholder="Paste YouTube URL here..." />
+        </div>
+        
+        <div class="options-grid">
+            <div class="input-group">
+                <label for="quality">Quality</label>
+                <div class="select-wrapper">
+                    <select id="quality">
+                        <option value="2160">4K (2160p)</option>
+                        <option value="1440">2K (1440p)</option>
+                        <option value="1080" selected>Full HD (1080p)</option>
+                        <option value="720">HD (720p)</option>
+                        <option value="480">SD (480p)</option>
+                        <option value="360">Low (360p)</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="input-group">
+                <label for="format">Format</label>
+                <div class="select-wrapper">
+                    <select id="format">
+                        <option value="mp4" selected>MP4 (Video)</option>
+                        <option value="webm">WEBM (Video)</option>
+                        <option value="mov">MOV (Video)</option>
+                        <option value="mp3">MP3 (Audio Only)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <button class="btn" id="downloadBtn">⬇️ Download Now</button>
+        
+        <div class="video-info" id="videoInfo"></div>
+        
+        <div class="progress" id="progress">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-text" id="progressText">0%</div>
+        </div>
+        
+        <div class="status" id="status"></div>
+
+        <div class="footer">
+            Made with 💜 | <a href="https://github.com/pixel-dot-cloud/vids-downloader" target="_blank">View on GitHub</a>
+        </div>
+    </div>
+
+    <script>
+        const videoUrlInput = document.getElementById('videoUrl');
+        const qualitySelect = document.getElementById('quality');
+        const formatSelect = document.getElementById('format');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const statusDiv = document.getElementById('status');
+        const progressDiv = document.getElementById('progress');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        const videoInfoDiv = document.getElementById('videoInfo');
+
+        function showStatus(message, type) {
+            statusDiv.innerHTML = message;
+            statusDiv.className = `status ${type}`;
+            statusDiv.style.display = 'block';
+        }
+
+        function hideStatus() {
+            statusDiv.style.display = 'none';
+        }
+
+        function showProgress(percent) {
+            progressDiv.style.display = 'block';
+            progressFill.style.width = percent + '%';
+            progressText.textContent = percent + '%';
+        }
+
+        function hideProgress() {
+            progressDiv.style.display = 'none';
+            progressFill.style.width = '0%';
+        }
+
+        async function getVideoInfo() {
+            const url = videoUrlInput.value.trim();
+            
+            if (!url) {
+                showStatus('❌ Please enter a valid YouTube URL', 'error');
+                return null;
+            }
+
+            try {
+                const response = await fetch('http://localhost:5000/info', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ url: url })
+                });
+
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Error fetching video info');
+                }
+
+                return data;
+            } catch (error) {
+                throw error;
+            }
+        }
+
+        async function downloadVideo() {
+            const url = videoUrlInput.value.trim();
+            const quality = qualitySelect.value;
+            const format = formatSelect.value;
+
+            if (!url) {
+                showStatus('❌ Please enter a valid YouTube URL', 'error');
+                return;
+            }
+
+            downloadBtn.disabled = true;
+            downloadBtn.classList.add('loading');
+            downloadBtn.textContent = '';
+            hideStatus();
+            hideProgress();
+            videoInfoDiv.style.display = 'none';
+
+            try {
+                // First, get video info (but don't show it yet)
+                showStatus('📋 Fetching video information...', 'info');
+                const info = await getVideoInfo();
+                
+                const formatBadge = format.toUpperCase();
+                const isAudio = format === 'mp3';
+
+                // Start download
+                showStatus(`⬇️ Downloading ${isAudio ? 'audio' : 'video'}...`, 'info');
+                showProgress(0);
+
+                const response = await fetch('http://localhost:5000/download', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        url: url,
+                        quality: quality,
+                        format: format
+                    })
+                });
+
+                // Simulate progress while downloading
+                let progress = 0;
+                const progressInterval = setInterval(() => {
+                    progress += 10;
+                    if (progress <= 90) {
+                        showProgress(progress);
+                    }
+                }, 200);
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Download error');
+                }
+
+                // Get response as JSON (server now saves directly)
+                const result = await response.json();
+                clearInterval(progressInterval);
+                showProgress(100);
+
+                // Show success message with file location
+                showStatus(`✅ Download completed!<br>📁 Saved to: ${result.file_name}`, 'success');
+
+                // NOW show video info after successful download
+                videoInfoDiv.innerHTML = `
+                    <div class="video-info-card">
+                        <img src="${info.thumbnail}" alt="Thumbnail">
+                        <div class="video-details">
+                            <div class="video-title">
+                                ${info.title}
+                                <span class="format-badge">${formatBadge}</span>
+                            </div>
+                            <div class="video-meta">
+                                <span>⏱️ ${info.duration}</span>
+                                <span>👤 ${info.uploader}</span>
+                                ${!isAudio ? `<span>🎬 ${quality}p</span>` : '<span>🎵 Audio</span>'}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                videoInfoDiv.style.display = 'block';
+                setTimeout(() => hideProgress(), 2000);
+
+            } catch (error) {
+                console.error('Error:', error);
+                hideProgress();
+                showStatus(`❌ Error: ${error.message}<br><br>💡 Make sure the server is running: <code>python server.py</code>`, 'error');
+            } finally {
+                downloadBtn.disabled = false;
+                downloadBtn.classList.remove('loading');
+                downloadBtn.textContent = '⬇️ Download Now';
+            }
+        }
+
+        downloadBtn.addEventListener('click', downloadVideo);
+
+        videoUrlInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                downloadVideo();
+            }
+        });
+
+        videoUrlInput.addEventListener('input', () => {
+            hideStatus();
+            videoInfoDiv.style.display = 'none';
+        });
+
+        // Auto-focus on URL input
+        videoUrlInput.focus();
+    </script>
+</body>
+</html>
