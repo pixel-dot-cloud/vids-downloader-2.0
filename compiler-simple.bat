@@ -16,7 +16,7 @@ pyinstaller --noconfirm --onefile --windowed ^
     --name "VidsDL" ^
     --add-data "localindex.html;." ^
     --collect-all yt_dlp ^
-    app-clean-FINAL.py
+    app.py
 
 echo.
 echo ========================================
