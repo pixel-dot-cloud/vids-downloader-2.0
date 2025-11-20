@@ -44,7 +44,7 @@ def format_duration(seconds):
 
 @app.route('/')
 def home():
-    html_path = os.path.join(BASE_DIR, 'localindex.html')
+    html_path = os.path.join(BASE_DIR, 'index.html')
     with open(html_path, 'r', encoding='utf-8') as f:
         return f.read()
 
