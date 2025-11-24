@@ -8,7 +8,7 @@
 
 **High-quality YouTube video & audio downloader with native desktop interface**
 
-[Download for Windows]([#-windows](https://github.com/pixel-dot-cloud/vids-downloader-2.0/releases/download/windows/VidsDL-windows.exe)) • [Download for Linux](#-linux) • [Features](#-features) • [Building](#-building-from-source)
+[Download for Windows](https://github.com/pixel-dot-cloud/vids-downloader-2.0/releases/download/windows/VidsDL-windows.exe) • [Download for Linux](#-linux) • [Features](#-features) • [Building](#-building-from-source)
 
 </div>
 
